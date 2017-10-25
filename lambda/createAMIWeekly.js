@@ -8,7 +8,7 @@ var ec2 = new aws.EC2();
 const keyForEpochMakerinAMI = "DATETODEL-";
 const keyForInstanceTagToBackup = "AutoDigiBackup"; //looks for string yes
 const keyForInstanceTagDurationBackup = "AutoDigiBackupRetentionWeeks"; // accepts number of weeks like 4 or 8 or 52 and so on.
-const keyForInstanceTagScheduledDays = "AutoDigiBackupSchedule"; //accepts day of week number: 0,1,2,3,4,5,6 . This will be 0 for Sunday and upto 6 for Saturday.
+const keyForInstanceTagScheduledDays = "AutoDigiBackupWeekSchedule"; //accepts day of week number: 0,1,2,3,4,5,6 . This will be 0 for Sunday and upto 6 for Saturday.
 const keyForInstanceTagNoReboot = "AutoDigiNoReboot"; //if true then it wont reboot. If not present or set to false then it will reboot.
 
 //returns true or false based on tag value 

@@ -8,7 +8,7 @@ var ec2 = new aws.EC2();
 const keyForEpochMakerinAMI = "DATETODEL-";
 const keyForInstanceTagToBackup = "AutoDigiBackup"; //looks for string yes
 const keyForInstanceTagDurationBackup = "AutoDigiBackupRetentionMonths"; // accepts number of months like 3 or 6 or 24 and so on.
-const keyForInstanceTagScheduledDays = "AutoDigiBackupSchedule"; //accepts day of month number: 1, 15, 31. Don't use leading 0.
+const keyForInstanceTagScheduledDays = "AutoDigiBackupMonthSchedule"; //accepts day of month number: 1, 15, 31. Don't use leading 0.
 const keyForInstanceTagNoReboot = "AutoDigiNoReboot"; //if true then it wont reboot. If not present or set to false then it will reboot.
 
 //returns true or false based on tag value 
