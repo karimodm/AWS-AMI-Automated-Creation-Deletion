@@ -8,17 +8,7 @@ var ec2 = new aws.EC2();
 const keyForEpochMakerinAMI = "DATETODEL-";
 const keyForInstanceTagToBackup = "AutoDigiBackup"; //looks for string yes
 const keyForInstanceTagDurationBackup = "AutoDigiBackupRetentionWeeks"; // accepts number of weeks like 4 or 8 or 52 and so on.
-const keyForInstanceTagScheduledDays = "AutoDigiBackupWeekSchedule"; //accepts day of week number: 0,1,2,3,4,5,6 . This will be 0 for Sunday and upto 6 for Saturday.
 const keyForInstanceTagNoReboot = "AutoDigiNoReboot"; //if true then it wont reboot. If not present or set to false then it will reboot.
-
-//returns true or false based on tag value 
-function checkIfBackupNeedsToRunToday(tagScheduleDays){
-    tagScheduleDays = tagScheduleDays.trim(); //just removing accidental spaces by user.
-    var today=new Date();
-    var dayOfWeek = today.getDay(); 
-    console.log("Should system process today? " + tagScheduleDays.includes(dayOfWeek));
-    return tagScheduleDays.includes(dayOfWeek);
-}
 
 //Lambda handler
 exports.handler = function(event, context) { 
@@ -46,9 +36,6 @@ exports.handler = function(event, context) {
                         if(data.Reservations[i].Instances[j].Tags[k].Key == keyForInstanceTagDurationBackup){
                             backupRetentionWeeksforAMI = parseInt(data.Reservations[i].Instances[j].Tags[k].Value);
                         }
-                        if(data.Reservations[i].Instances[j].Tags[k].Key == keyForInstanceTagScheduledDays){
-                            backupRunTodayCheck = data.Reservations[i].Instances[j].Tags[k].Value;
-                        }         
                         if(data.Reservations[i].Instances[j].Tags[k].Key == keyForInstanceTagNoReboot){
                             if(data.Reservations[i].Instances[j].Tags[k].Value == "true"){
                                 noReboot = true;
@@ -56,10 +43,10 @@ exports.handler = function(event, context) {
                         }                        
                     }
                     //cant find when to delete then dont proceed.
-                    if((backupRetentionWeeksforAMI < 1) || (checkIfBackupNeedsToRunToday(backupRunTodayCheck) === false)){
-                        console.log("Skipping instance Name: " + name + " backupRetentionWeeksforAMI: " + backupRetentionWeeksforAMI + " backupRunTodayCheck: " + backupRunTodayCheck + " checkIfBackupNeedsToRunToday:" + checkIfBackupNeedsToRunToday(backupRunTodayCheck) + " (backupRetentionWeeksforAMI > 0)" + (backupRetentionWeeksforAMI > 0));
+                    if((backupRetentionWeeksforAMI < 1)){
+                        console.log("Skipping instance Name: " + name + " backupRetentionWeeksforAMI: " + backupRetentionWeeksforAMI);
                     }else{
-                        console.log("Processing instance Name: " + name + " backupRetentionWeeksforAMI: " + backupRetentionWeeksforAMI + " backupRunTodayCheck: " + backupRunTodayCheck + " checkIfBackupNeedsToRunToday:" + checkIfBackupNeedsToRunToday(backupRunTodayCheck) + " (backupRetentionWeeksforAMI > 0)" + (backupRetentionWeeksforAMI > 0));                        
+                        console.log("Processing instance Name: " + name + " backupRetentionWeeksforAMI: " + backupRetentionWeeksforAMI);
                         var genDate = new Date();  
                         genDate.setDate(genDate.getDate() + backupRetentionWeeksforAMI * 7); //* 7 for weeks that are required to be held
                         var imageparams = {

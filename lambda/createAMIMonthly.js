@@ -8,17 +8,7 @@ var ec2 = new aws.EC2();
 const keyForEpochMakerinAMI = "DATETODEL-";
 const keyForInstanceTagToBackup = "AutoDigiBackup"; //looks for string yes
 const keyForInstanceTagDurationBackup = "AutoDigiBackupRetentionMonths"; // accepts number of months like 3 or 6 or 24 and so on.
-const keyForInstanceTagScheduledDays = "AutoDigiBackupMonthSchedule"; //accepts day of month number: 1, 15, 31. Don't use leading 0.
 const keyForInstanceTagNoReboot = "AutoDigiNoReboot"; //if true then it wont reboot. If not present or set to false then it will reboot.
-
-//returns true or false based on tag value 
-function checkIfBackupNeedsToRunToday(tagScheduleDays){
-    tagScheduleDays = tagScheduleDays.trim(); //just removing accidental spaces by user.
-    var today=new Date();
-    var dayOfMonth = today.getDate(); 
-    console.log("Should system process today? " + (tagScheduleDays == dayOfMonth));
-    return tagScheduleDays == dayOfMonth;
-}
 
 //Lambda handler
 exports.handler = function(event, context) { 
@@ -38,7 +28,7 @@ exports.handler = function(event, context) {
             for (var i in data.Reservations) {
                 for (var j in data.Reservations[i].Instances) {
                     var instanceid = data.Reservations[i].Instances[j].InstanceId;
-                    var name = "", backupRetentionMonthsforAMI = -1, backupRunTodayCheck = "", noReboot = false;
+                    var name = "", backupRetentionMonthsforAMI = -1, noReboot = false;
                     for (var k in data.Reservations[i].Instances[j].Tags) {
                         if (data.Reservations[i].Instances[j].Tags[k].Key == 'Name') {
                             name = data.Reservations[i].Instances[j].Tags[k].Value;
@@ -46,9 +36,6 @@ exports.handler = function(event, context) {
                         if(data.Reservations[i].Instances[j].Tags[k].Key == keyForInstanceTagDurationBackup){
                             backupRetentionMonthsforAMI = parseInt(data.Reservations[i].Instances[j].Tags[k].Value);
                         }
-                        if(data.Reservations[i].Instances[j].Tags[k].Key == keyForInstanceTagScheduledDays){
-                            backupRunTodayCheck = data.Reservations[i].Instances[j].Tags[k].Value;
-                        }         
                         if(data.Reservations[i].Instances[j].Tags[k].Key == keyForInstanceTagNoReboot){
                             if(data.Reservations[i].Instances[j].Tags[k].Value == "true"){
                                 noReboot = true;
@@ -56,10 +43,10 @@ exports.handler = function(event, context) {
                         }                        
                     }
                     //cant find when to delete then dont proceed.
-                    if((backupRetentionMonthsforAMI < 1) || (checkIfBackupNeedsToRunToday(backupRunTodayCheck) === false)){
-                        console.log("Skipping instance Name: " + name + " backupRetentionMonthsforAMI: " + backupRetentionMonthsforAMI + " backupRunTodayCheck: " + backupRunTodayCheck + " checkIfBackupNeedsToRunToday:" + checkIfBackupNeedsToRunToday(backupRunTodayCheck) + " (backupRetentionMonthsforAMI > 0)" + (backupRetentionMonthsforAMI > 0));
+                    if((backupRetentionMonthsforAMI < 1)){
+                        console.log("Skipping instance Name: " + name + " backupRetentionMonthsforAMI: " + backupRetentionMonthsforAMI);
                     }else{
-                        console.log("Processing instance Name: " + name + " backupRetentionMonthsforAMI: " + backupRetentionMonthsforAMI + " backupRunTodayCheck: " + backupRunTodayCheck + " checkIfBackupNeedsToRunToday:" + checkIfBackupNeedsToRunToday(backupRunTodayCheck) + " (backupRetentionMonthsforAMI > 0)" + (backupRetentionMonthsforAMI > 0));                        
+                        console.log("Processing instance Name: " + name + " backupRetentionMonthsforAMI: " + backupRetentionMonthsforAMI);
                         var genDate = new Date();  
                         genDate.setDate(genDate.getDate() + backupRetentionMonthsforAMI * 30); //* 30 for months that are required to be held
                         var imageparams = {
